@@ -19,24 +19,50 @@ void WarGame::play_round()
 
     if (player_card == -1 || computer_card == -1)
     {
-        return;
+        return; // gameover
     }
 
-    std::cout << "Choose action ('push' to add to side pile, 'pull' to draw extra, or 'play' to continue with one card): ";
+    bool valid_action = false;
     std::string action;
-    std::cin >> action;
 
-    if (action == "push")
+    while (!valid_action)
     {
-        player_side_pile.push(player_card);
-        player_card = player_deck.draw();
-    }
-    else if (action == "pull")
-    {
-        int side_card = player_side_pile.pop();
-        if (side_card != -1)
+        std::cout << "Choose action ('push' to add to side pile, 'pull' to draw extra, or 'play' to continue with one card): ";
+        std::cin >> action;
+
+        if (action == "push")
         {
-            player_card += side_card;
+            try
+            {
+                player_side_pile.push(player_card);
+                player_card = player_deck.draw();
+                valid_action = true; // push success
+            }
+            catch (const std::overflow_error& e)
+            {
+                std::cout << e.what() << " Please choose a different action.\n";
+            }
+        }
+        else if (action == "pull")
+        {
+            int side_card = player_side_pile.pop();
+            if (side_card != -1)
+            {
+                player_card += side_card;
+                valid_action = true; //pull success
+            }
+            else
+            {
+                std::cout << "Side pile is empty. Please choose a different action.\n";
+            }
+        }
+        else if (action == "play")
+        {
+            valid_action = true; // `play`가 선택되면 valid_action을 true로 설정
+        }
+        else
+        {
+            std::cout << "Invalid action. Please choose again.\n";
         }
     }
 
@@ -60,6 +86,7 @@ void WarGame::play_round()
         computer_deck.add(computer_card);
     }
 }
+
 
 void WarGame::display_card_counts()
 {
