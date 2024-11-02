@@ -14,6 +14,8 @@ public:
     void push(int card);
     int pop();
     int size() const;
+    bool is_empty() const; 
+
 };
 
 #endif

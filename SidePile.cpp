@@ -26,3 +26,8 @@ int SidePile::size() const
 {
     return pile.size();
 }
+
+bool SidePile::is_empty() const
+{
+    return pile.empty(); 
+}

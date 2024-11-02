@@ -14,33 +14,74 @@ void WarGame::populate_decks()
 
 void WarGame::play_round()
 {
-    int player_card = player_deck.draw();
-    int computer_card = computer_deck.draw();
+    int player_card = (player_deck.remaining_cards() > 0) ? player_deck.draw() : player_side_pile.pop();
+    int computer_card = (computer_deck.remaining_cards() > 0) ? computer_deck.draw() : computer_side_pile.pop();
 
-    if (player_card == -1 || computer_card == -1)
+    if (player_card == -1 && computer_card == -1)
     {
+        std::cout << "Both players ran out of cards. It's a tie!\n";
+        return;
+    }
+    else if (player_card == -1)
+    {
+        std::cout << "Player has no cards left. Computer wins the game!\n";
+        return;
+    }
+    else if (computer_card == -1)
+    {
+        std::cout << "Computer has no cards left. Player wins the game!\n";
         return;
     }
 
-    std::cout << "Choose action ('push' to add to side pile, 'pull' to draw extra, or 'play' to continue with one card): ";
+    bool valid_action = false;
     std::string action;
-    std::cin >> action;
 
-    if (action == "push")
+    while (!valid_action)
     {
-        player_side_pile.push(player_card);
-        player_card = player_deck.draw();
-    }
-    else if (action == "pull")
-    {
-        int side_card = player_side_pile.pop();
-        if (side_card != -1)
+        std::cout << "Choose action ('push' to add to side pile, 'pull' to draw extra, 'play' to continue, 'view' to see current card): ";
+        std::cin >> action;
+
+        if (action == "view")
         {
-            player_card += side_card;
+            std::cout << "Your current card is: " << player_card << "\n";
+        }
+        else if (action == "push")
+        {
+            try
+            {
+                player_side_pile.push(player_card);
+                player_card = (player_deck.remaining_cards() > 0) ? player_deck.draw() : player_side_pile.pop();
+                valid_action = true;
+            }
+            catch (const std::overflow_error& e)
+            {
+                std::cout << e.what() << " Please choose a different action.\n";
+            }
+        }
+        else if (action == "pull")
+        {
+            if (!player_side_pile.is_empty())
+            {
+                int side_card = player_side_pile.pop();
+                player_card += side_card;
+                valid_action = true;
+            }
+            else
+            {
+                std::cout << "Side pile is empty. Please choose a different action.\n";
+            }
+        }
+        else if (action == "play")
+        {
+            valid_action = true;
+        }
+        else
+        {
+            std::cout << "Invalid action. Please choose again.\n";
         }
     }
 
-    if (rand() % 2 == 1 && computer_side_pile.size() > 0)
+    if (rand() % 2 == 1 && !computer_side_pile.is_empty())
     {
         int side_card = computer_side_pile.pop();
         computer_card += side_card;
@@ -64,7 +105,7 @@ void WarGame::play_round()
 void WarGame::display_card_counts()
 {
     std::cout << "Player deck: " << player_deck.remaining_cards()
-              << " cards, Side pile: " << player_side_pile.size() << " cards\n";
+        << " cards, Side pile: " << player_side_pile.size() << " cards\n";
     std::cout << "Computer deck: " << computer_deck.remaining_cards() << " cards\n";
 }
 
@@ -78,8 +119,8 @@ void WarGame::play_game()
 {
     std::cout << "Welcome to the War Game!\n";
     while ((rounds == -1 || rounds_played < rounds) &&
-           player_deck.remaining_cards() > 0 &&
-           computer_deck.remaining_cards() > 0)
+        (player_deck.remaining_cards() > 0 || !player_side_pile.is_empty()) &&
+        (computer_deck.remaining_cards() > 0 || !computer_side_pile.is_empty()))
     {
         display_card_counts();
         play_round();
@@ -99,3 +140,5 @@ void WarGame::play_game()
         std::cout << "It's a tie!\n";
     }
 }
+
+
